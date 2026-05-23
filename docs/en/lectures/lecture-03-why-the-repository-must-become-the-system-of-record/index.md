@@ -34,7 +34,7 @@ flowchart LR
     Warning["If a rule isn't in the repo,<br/>the agent can't see it"] --> Agent
 ```
 
-How do you test whether your map is good enough? Run a "cold-start test": open a brand-new agent session, give it only the repository contents, and see if it can answer five basic questions.
+How do you test whether your map is good enough? Run a "fresh session test": open a brand-new agent session, give it only the repository contents, and see if it can answer five basic questions.
 
 ```mermaid
 flowchart TB
@@ -57,7 +57,7 @@ If it can't answer, the map has blank spots. Where the map is blank, the agent h
 
 - **Knowledge Visibility Gap**: The proportion of total project knowledge that's NOT in the repository. The bigger the gap, the higher the agent's failure rate. You can estimate it like this: count all the implicit knowledge about this project that lives in people's heads, then see how much of it actually made it into the repo. The difference is your visibility gap.
 - **System of Record**: The code repository as the authoritative source for project decisions, architecture constraints, execution state, and verification standards. The repo has the final say — nowhere else counts. If the information "this road is closed" only lives in Old Zhang's head, then every single time you have to ask Old Zhang. Write it in the repo, and nobody has to ask.
-- **Cold-Start Test**: The five questions from the previous section. How many the agent can answer is how complete your map is.
+- **Fresh Session Test**: The five questions from the previous section. How many the agent can answer is how complete your map is.
 - **Discovery Cost**: How much context budget the agent burns to find a single key piece of information in the repo. The more hidden the information, the higher the discovery cost, and the less budget remains for the actual task. Critical information should be placed where the agent sees it first — not buried ten directory levels deep.
 - **Knowledge Decay Rate**: The proportion of knowledge entries in the repo that become stale per unit of time. Documentation drifting out of sync with code is the biggest enemy — worse than no documentation at all is documentation that's out of date.
 - **ACID Analogy**: Applying database transaction principles (Atomicity, Consistency, Isolation, Durability) to agent state management. We'll expand on this below.
@@ -68,7 +68,7 @@ If it can't answer, the map has blank spots. Where the map is blank, the agent h
 
 **Principle 2: Use a standardized entry file.** `AGENTS.md` (or `CLAUDE.md`) is the agent's "landing page." It doesn't need to contain all information, but it must let the agent quickly answer three questions: "What is this project," "How do I run it," and "How do I verify it." 50–100 lines is enough.
 
-**Principle 3: Minimal but complete.** Every piece of knowledge should have a clear use case. If removing a rule doesn't affect the agent's decision quality, that rule shouldn't exist. But every question from the cold-start test must have an answer. This is an ongoing balance to maintain — not too much, not too little, just enough.
+**Principle 3: Minimal but complete.** Every piece of knowledge should have a clear use case. If removing a rule doesn't affect the agent's decision quality, that rule shouldn't exist. But every question from the fresh session test must have an answer. This is an ongoing balance to maintain — not too much, not too little, just enough.
 
 **Principle 4: Update with code.** Bind knowledge updates to code changes. The simplest approach: put architecture docs in the corresponding module directory. When you modify code, you naturally notice the doc. After code changes, CI can remind you to check whether the docs need updating.
 
@@ -110,12 +110,12 @@ The team executed a transformation:
 3. Created a centralized `CONSTRAINTS.md` using explicit "MUST / MUST NOT" language for hard constraints
 4. Added `PROGRESS.md` in each service directory tracking current work status
 
-After transformation: the same agent could answer all key project questions on cold start, and task completion quality improved significantly.
+After transformation: the same agent could answer all key project questions on a fresh session, and task completion quality improved significantly.
 
 ## Key Takeaways
 
 - Knowledge not in the repo doesn't exist for the agent. Putting critical decision information into the repository is the most fundamental harness investment — draw a good map so you don't get lost.
-- Use the "cold-start test" to evaluate repo quality: can a brand-new session answer five basic questions using only repo contents?
+- Use the "fresh session test" to evaluate repo quality: can a brand-new session answer five basic questions using only repo contents?
 - Knowledge should be near code, minimal but complete, and updated together with code. It's not about writing more docs — it's about putting information in the right place.
 - Use ACID principles for agent state: atomic commits, consistency verification, concurrency isolation, and durable critical knowledge.
 - Knowledge decay is the biggest enemy. Out-of-date documentation is more dangerous than no documentation at all — it sends the agent in the wrong direction while the agent thinks it's on the right track.
@@ -130,7 +130,7 @@ After transformation: the same agent could answer all key project questions on c
 
 ## Exercises
 
-1. **Cold-start test**: Open a completely fresh agent session in your project (provide no verbal context whatsoever), let it see only the repository contents, then ask it five questions: What is this system? How is it organized? How do I run it? How do I verify it? What's the current progress? Record which ones it can't answer, then improve the repo until it can answer all of them.
+1. **Fresh session test**: Open a completely fresh agent session in your project (provide no verbal context whatsoever), let it see only the repository contents, then ask it five questions: What is this system? How is it organized? How do I run it? How do I verify it? What's the current progress? Record which ones it can't answer, then improve the repo until it can answer all of them.
 
 2. **Knowledge externalization quantification**: List all decisions and constraints important to development work in your project. Mark each item as inside or outside the repo. Calculate your knowledge visibility gap (the proportion of items outside the repo). Make a plan to bring the gap below 10%.
 

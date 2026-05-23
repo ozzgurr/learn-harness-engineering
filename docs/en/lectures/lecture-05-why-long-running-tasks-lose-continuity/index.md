@@ -15,11 +15,11 @@ Context windows are finite. This isn't a problem that model upgrades can solve �
 
 A deeper problem: the information agents produce isn't uniformly important. Intermediate reasoning steps contain the "why" of decisions — why option A was chosen over B, why this library instead of that one, why a particular optimization was skipped. The final output only contains the "what" — the code itself. Compaction strategies usually preserve the latter but lose the former. The next session sees the code but doesn't know why it's written that way, and might "optimize" away a deliberate design decision.
 
-Anthropic observed something interesting in their long-running agent research: when agents sense context is running low, they exhibit "premature convergence" behavior — rushing to finish current work, skipping verification steps, or choosing a simple solution over the optimal one. Anthropic calls this "context anxiety."
+Anthropic observed something interesting in their long-running agent research: when agents sense context is running low, they exhibit a "rushed finish" behavior — rushing to finish current work, skipping verification steps, or choosing a simple solution over the optimal one. Anthropic calls this "context anxiety."
 
 ## Session Continuity Flow
 
-Without continuity artifacts, every new session has to start from scratch:
+Without state persistence files, every new session has to start from scratch:
 
 ```mermaid
 flowchart LR
@@ -29,7 +29,7 @@ flowchart LR
     Guess --> Drift["Work gets repeated<br/>and recovery is slow"]
 ```
 
-With continuity artifacts, new sessions can pick up quickly:
+With state persistence files, new sessions can pick up quickly:
 
 ```mermaid
 flowchart LR
@@ -49,10 +49,10 @@ flowchart LR
 ## Core Concepts
 
 - **Context windows are finite**: No matter what window size is claimed (128K, 200K, 1M), long tasks will eventually exhaust them. After exhaustion, either compaction (losing information) or reset (starting a new session) is required — both lose something.
-- **Continuity artifacts**: Persisted state files that let a new session unambiguously resume where the last one left off. The most basic form includes progress logs, verification records, and next actions.
+- **State persistence files**: Persisted state files that let a new session unambiguously resume where the last one left off. The most basic form includes progress logs, verification records, and next actions.
 - **Rebuild cost**: The time a new session needs to reach an executable state. A good harness can compress rebuild cost from 15 minutes to 3 minutes.
 - **Drift**: The gap between the agent's understanding and the actual state of the code repository. Every session boundary introduces drift; without control, it compounds session after session.
-- **Context anxiety**: A phenomenon observed by Anthropic — agents exhibit premature convergence behavior when approaching context limits, ending tasks early to avoid information loss. At its core, it's an irrational resource anxiety.
+- **Context anxiety**: A phenomenon observed by Anthropic — agents exhibit rushed finish behavior when approaching context limits, ending tasks early to avoid information loss. At its core, it's an irrational resource anxiety.
 - **Compaction vs. reset**: Compaction summarizes context within the same session (keeps "what," may lose "why"); reset opens a new session rebuilding from persisted state (clean but depends on artifact completeness).
 
 ## What Happens When Continuity Breaks
@@ -71,7 +71,7 @@ Both OpenAI and Anthropic emphasize structured state persistence in their docume
 
 Core approach: **Treat the agent like an engineer whose short-term memory gets wiped at every session.** Before it "clocks out," it must write down critical information so the next "shift" agent can pick up quickly.
 
-**Tool 1: Progress file (PROGRESS.md).** The most basic continuity artifact:
+**Tool 1: Progress file (PROGRESS.md).** The most basic state persistence file:
 
 ```markdown
 # Project Progress
@@ -131,11 +131,11 @@ Core approach: **Treat the agent like an engineer whose short-term memory gets w
 
 ### A Deeper Look at Context Anxiety
 
-Anthropic's March 2026 research further revealed the specific manifestations of context anxiety: on Sonnet 4.5, when context approaches the window limit, the agent shows strong "premature convergence" behavior.
+Anthropic's March 2026 research further revealed the specific manifestations of context anxiety: on Sonnet 4.5, when context approaches the window limit, the agent shows strong "rushed finish" behavior.
 
 Two strategies address this:
 
-**Compaction**: Summarizing early conversation within the same session. Advantage: maintains continuity, the agent can see "what." Disadvantage: "why" is often lost in summaries — why option B was chosen over A, why a particular optimization was skipped. More critically, compaction doesn't eliminate context anxiety — the agent knows context was once large, and psychologically still tends to rush to closure.
+**Compaction**: Summarizing early conversation within the same session. Advantage: maintains continuity, the agent can see "what." Disadvantage: "why" is often lost in summaries — why option B was chosen over A, why a particular optimization was skipped. More critically, compaction doesn't eliminate context anxiety — the agent knows context was once large, and psychologically still tends to rush to finish.
 
 **Context reset**: Completely clearing context, opening a new session, rebuilding from persisted artifacts. Advantage: clean mental state — the new session has no "I'm running out of time" anxiety. Disadvantage: depends on the completeness of handoff artifacts. If the progress file is missing critical information, the new session may waste time going in the wrong direction.
 
@@ -147,9 +147,9 @@ Anthropic's actual data: for Sonnet 4.5, context anxiety is severe enough that c
 
 An agent was tasked with implementing a blog system with user authentication — 12 feature points, estimated 5 sessions needed.
 
-**Baseline without continuity artifacts**: Session 1 implemented the user model and basic routes. Session 2 started without the agent remembering the auth middleware's interface contract, spending ~15 minutes inferring the previous design intent. By session 3, accumulated drift caused the agent to start reimplementing already-completed features. By session 5, the repo contained lots of redundant code but the core auth feature still hadn't passed end-to-end tests. Only 7 of 12 feature points completed, 3 with hidden correctness issues.
+**Baseline without state persistence files**: Session 1 implemented the user model and basic routes. Session 2 started without the agent remembering the auth middleware's interface contract, spending ~15 minutes inferring the previous design intent. By session 3, accumulated drift caused the agent to start reimplementing already-completed features. By session 5, the repo contained lots of redundant code but the core auth feature still hadn't passed end-to-end tests. Only 7 of 12 feature points completed, 3 with hidden correctness issues.
 
-**With continuity artifacts**: Using progress files, decision logs, verification records, and git checkpoints. State report updated automatically at each session end. Session 2's rebuild cost dropped to ~3 minutes. By session 5, all 12 feature points completed and verified.
+**With state persistence files**: Using progress files, decision logs, verification records, and git checkpoints. State report updated automatically at each session end. Session 2's rebuild cost dropped to ~3 minutes. By session 5, all 12 feature points completed and verified.
 
 Quantitative comparison: rebuild time reduced ~78%, feature completion rate from 58% to 100%, hidden defect rate from 43% down to 8%.
 
@@ -171,7 +171,7 @@ Quantitative comparison: rebuild time reduced ~78%, feature completion rate from
 
 ## Exercises
 
-1. **Continuity loss measurement**: Pick a development task needing at least 3 sessions. Without providing any continuity artifacts, record at each session start how much context the agent spends "figuring out what happened last time." After each session, create a progress file and let the next session start from it. Compare rebuild costs with and without progress files.
+1. **State persistence measurement**: Pick a development task needing at least 3 sessions. Without providing any state persistence files, record at each session start how much context the agent spends "figuring out what happened last time." After each session, create a progress file and let the next session start from it. Compare rebuild costs with and without progress files.
 
 2. **Handoff template design**: Design a minimal handoff template with four fields: repo state (commit hash), runtime state (test pass rate), blockers, next actions. Let a completely fresh agent session restore project state using only this template. Record ambiguities encountered during restoration, iterate to improve the template.
 

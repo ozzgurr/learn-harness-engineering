@@ -33,7 +33,7 @@ Look at a few tools you already know:
 - **The repo is the single source of truth**: Anything the agent cannot see, for all practical purposes, does not exist. OpenAI treats the repo as the "system of record" — all necessary context must live there, delivered through structured files and clear directory organization.
 - **Give a map, not a manual**: OpenAI's experience is that `AGENTS.md` should be a directory page, not an encyclopedia. Around 100 lines is enough. If it does not fit, split it into a `docs/` directory and let the agent read on demand.
 - **Constrain, don't micromanage**: A good harness uses executable rules to constrain the agent, rather than enumerating instructions one by one. OpenAI says "enforce invariants, don't micromanage implementation"; Anthropic found that agents confidently praise their own work, and the solution is to separate "the person who does the work" from "the person who checks the work."
-- **Remove components one at a time**: To quantify each harness component's marginal contribution, remove them one at a time and see which removal causes the biggest performance drop. This tells you which components are most valuable right now, and it also reveals which ones are not yet contributing meaningfully. Anthropic used this method and discovered that as models get stronger, some components stop being critical — but new critical components always emerge.
+- **Remove one at a time and observe**: To quantify each harness component's marginal contribution, remove them one at a time and see which removal causes the biggest performance drop. This tells you which components are most valuable right now, and it also reveals which ones are not yet contributing meaningfully. Anthropic used this method and discovered that as models get stronger, some components stop being critical — but new critical components always emerge.
 
 ## The Five-Subsystem Harness Model
 
@@ -68,7 +68,7 @@ Verification commands:
 
 Missing any one of the five subsystems means an incomplete harness, and the agent will always feel awkward to use.
 
-**Quantifying harness component value**: Use an "ablation experiment under the same model." Keep the model fixed, remove the five subsystems one at a time, and see which subsystem's removal causes the biggest performance drop. The component with the largest drop has the highest marginal contribution for the current task and is worth prioritizing. Whether to strengthen it depends on failure attribution, not just the size of the drop. Components with near-zero impact should not be dismissed outright: they may be redundant, poorly designed, or simply not exercised by the current task. This experiment answers "which component is most valuable right now" — it cannot, by itself, prove "where the bottleneck is." To truly locate a bottleneck, you must first examine failure records and attributions: was the task unclear, was context insufficient, was the environment unreproducible, was verification feedback missing, or was state management broken? Component ablation results can only serve as supporting evidence.
+**Quantifying harness component value**: Use a "controlled variable exclusion test." Keep the model fixed, remove the five subsystems one at a time, and see which subsystem's removal causes the biggest performance drop. The component with the largest drop has the highest marginal contribution for the current task and is worth prioritizing. Whether to strengthen it depends on failure attribution, not just the size of the drop. Components with near-zero impact should not be dismissed outright: they may be redundant, poorly designed, or simply not exercised by the current task. This experiment answers "which component is most valuable right now" — it cannot, by itself, prove "where the bottleneck is." To truly locate a bottleneck, you must first examine failure records and attributions: was the task unclear, was context insufficient, was the environment unreproducible, was verification feedback missing, or was state management broken? Component ablation results can only serve as supporting evidence.
 
 ## A Team's Real Story
 
@@ -89,7 +89,7 @@ Four iterations, the model did not change at all, and success rate went from 20%
 - Harness = Instructions + Tools + Environment + State + Feedback. All five subsystems are essential.
 - If it is not model weights, it is harness. Your harness determines how much of the model's capability gets realized.
 - Among the five subsystems, the feedback subsystem usually has the lowest investment and highest return. Get your verification commands right first.
-- Use "ablation experiments under the same model" to quantify each subsystem's marginal contribution; to locate the real bottleneck, rely on failure records and attribution, not ablation alone.
+- Use "controlled variable exclusion tests" to quantify each subsystem's marginal contribution; to locate the real bottleneck, rely on failure records and attribution, not ablation alone.
 - Harness rots like code does. Audit regularly, and pay down harness debt just like you pay down technical debt.
 
 ## Further Reading
@@ -104,6 +104,6 @@ Four iterations, the model did not change at all, and success rate went from 20%
 
 1. **Five-tuple harness audit**: Take a project where you currently use an AI agent and do a complete audit using the five-tuple framework. Score each subsystem 1-5. Find the lowest-scoring subsystem, spend 30 minutes improving it, and then observe the change in agent performance.
 
-2. **Component-value ablation under the same model**: Pick one model and one challenging task. Sequentially remove instructions (delete AGENTS.md), remove feedback (do not provide verification commands), remove state (no progress files) — removing only one at a time, and measure the performance drop. Use the results to rank each subsystem's marginal value for the current task. If you want to find the bottleneck, you must also record failure logs and do root-cause attribution alongside the ablation.
+2. **Controlled variable exclusion test**: Pick one model and one challenging task. Sequentially remove instructions (delete AGENTS.md), remove feedback (do not provide verification commands), remove state (no progress files) — removing only one at a time, and measure the performance drop. Use the results to rank each subsystem's marginal value for the current task. If you want to find the bottleneck, you must also record failure logs and do root-cause attribution alongside the ablation.
 
 3. **Affordance analysis**: Find a scenario in your project where the agent "wants to do something but can't" (e.g., knows it should use parameterized queries but does not know your project's ORM patterns). Analyze whether this is a Gulf of Execution (does not know how to operate) or a Gulf of Evaluation (does not know whether it did things right), then design a harness improvement to bridge the gap.

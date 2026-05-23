@@ -29,7 +29,7 @@ flowchart TB
 
     subgraph Right["Dedicated initialization phase (right)"]
         R1["Session 1: environment runnable"] --> R2["Example test passing"]
-        R2 --> R3["Bootstrap contract + task list written"]
+        R2 --> R3["Startup readiness checklist + task list written"]
         R3 --> R4["Clean checkpoint committed"]
         R4 --> R5["Later sessions start directly on verified tasks"]
     end
@@ -52,11 +52,11 @@ OpenAI's Codex harness engineering guide also emphasizes the "repository as oper
 ## Core Concepts
 
 - **Initialization Phase**: The first phase in the agent's lifecycle — it only establishes the prerequisites for subsequent implementation, with no feature development. Its output is infrastructure, not business code.
-- **Bootstrap Contract**: The conditions under which a project can be unambiguously operated by a fresh agent session: can start, can test, can see progress, can pick up next steps. Four conditions, all required.
-- **Cold Start vs Warm Start**: Cold start is from an empty directory where the agent must infer project structure on its own; warm start is from a template or existing project where infrastructure is already in place. Warm start far outperforms cold start.
-- **Handoff Readiness**: The project is in a state at any given moment where a fresh agent can take over. No verbal explanation needed — just looking at the repo contents is enough to continue working.
-- **Time to First Verification**: The time from project start until the first feature point passes verification. This is the core metric for measuring initialization efficiency.
-- **Downstream Usability**: The proportion of subsequent sessions that can successfully execute tasks without relying on implicit knowledge. This is the best measure of initialization quality.
+- **Startup Readiness Checklist**: The conditions under which a project can be unambiguously operated by a fresh agent session: can start, can test, can see progress, can pick up next steps. Four conditions, all required.
+- **From Scratch vs From Template**: Starting from scratch means the agent must infer project structure on its own from an empty directory; starting from a template means infrastructure is already in place. Starting from a template far outperforms starting from scratch.
+- **Always Ready to Hand Off**: The project is in a state at any given moment where a fresh agent can take over. No verbal explanation needed — just looking at the repo contents is enough to continue working.
+- **Time from Start to First Passing Test**: The time from project start until the first feature point passes verification. This is the core metric for measuring initialization efficiency.
+- **Success Rate of Subsequent Sessions**: The proportion of subsequent sessions that can successfully execute tasks without relying on implicit knowledge. This is the best measure of initialization quality.
 
 ## How to Do Initialization Right
 
@@ -66,9 +66,9 @@ OpenAI's Codex harness engineering guide also emphasizes the "repository as oper
 
 **2. Verifiable test framework.** At least one example test passes, proving the test framework itself is properly configured.
 
-**3. Bootstrap contract document.** A clear document telling subsequent sessions:
+**3. Startup readiness checklist document.** A clear document telling subsequent sessions:
 ```markdown
-# Initialization Contract
+# Startup Readiness Checklist
 
 ## Start Commands
 - Install dependencies: `make setup`
@@ -109,9 +109,9 @@ OpenAI's Codex harness engineering guide also emphasizes the "repository as oper
 
 **5. Git commit as checkpoint.** After initialization completes, commit a clean checkpoint. All subsequent work starts from this checkpoint.
 
-**Warm start strategy**: Don't start from an empty directory. Use a project template (create-react-app, fastapi-template, etc.) to preset standard directory structure, dependency configuration, and test framework. Bake common initialization steps into the template, leaving only project-specific initialization work.
+**Starting from a template**: Don't start from an empty directory. Use a project template (create-react-app, fastapi-template, etc.) to preset standard directory structure, dependency configuration, and test framework. Bake common initialization steps into the template, leaving only project-specific initialization work.
 
-**Initialization completion criteria**: Not "how much code was written," but whether the bootstrap contract's four conditions are all met: can start, can test, can see progress, can pick up next steps. Use this checklist to validate initialization:
+**Initialization completion criteria**: Not "how much code was written," but whether the startup readiness checklist's four conditions are all met: can start, can test, can see progress, can pick up next steps. Use this checklist to validate initialization:
 
 ```markdown
 ## Initialization Acceptance Checklist
@@ -128,16 +128,16 @@ Two initialization approaches for a React frontend project, compared:
 
 **Mixed approach**: The agent simultaneously created project scaffolding and implemented the first feature in session 1. At session end, the repo had runnable code but no explicit start/test command documentation, no progress tracking file, no task breakdown. Session 2 spent about 20 minutes inferring project structure, test framework, and build process.
 
-**Dedicated initialization**: Session 1 did only initialization — created directory structure from a template, configured the test framework (Vitest + React Testing Library), wrote and verified one example test, created the bootstrap contract document and task breakdown file, committed the initial checkpoint. Session 2's rebuild time was under 3 minutes, and it started working directly from the task list.
+**Dedicated initialization**: Session 1 did only initialization — created directory structure from a template, configured the test framework (Vitest + React Testing Library), wrote and verified one example test, created the startup readiness checklist and task breakdown file, committed the initial checkpoint. Session 2's rebuild time was under 3 minutes, and it started working directly from the task list.
 
 Full project cycle comparison: the mixed approach's total rebuild time (across all sessions) was about 60% more than the dedicated initialization approach. The extra 20 minutes spent on initialization was recovered many times over in subsequent sessions. Invest a bit more time up front to do initialization properly, and subsequent efficiency is actually higher.
 
 ## Key Takeaways
 
 - Initialization and implementation have different optimization targets — mixing them only drags both down.
-- Initialization's output isn't business code, it's infrastructure: runnable environment, verifiable tests, bootstrap contract, task breakdown.
-- Validate initialization with the bootstrap contract's four conditions: can start, can test, can see progress, can pick up next steps.
-- Warm start beats cold start. Use project templates to preset standardized infrastructure.
+- Initialization's output isn't business code, it's infrastructure: runnable environment, verifiable tests, startup readiness checklist, task breakdown.
+- Validate initialization with the startup readiness checklist's four conditions: can start, can test, can see progress, can pick up next steps.
+- Starting from a template beats starting from scratch. Use project templates to preset standardized infrastructure.
 - Time invested in initialization is fully recovered in the next 3-4 sessions. This isn't extra cost — it's upfront investment.
 
 ## Further Reading
@@ -150,8 +150,8 @@ Full project cycle comparison: the mixed approach's total rebuild time (across a
 
 ## Exercises
 
-1. **Bootstrap contract design**: Write a complete bootstrap contract for a project you're developing. Then open a completely fresh agent session, show it only repo contents (no verbal context at all), and have it try to start the project, run tests, and understand current progress. Record every problem it encounters — each one corresponds to a missing clause in your bootstrap contract.
+1. **Startup readiness checklist design**: Write a complete startup readiness checklist for a project you're developing. Then open a completely fresh agent session, show it only repo contents (no verbal context at all), and have it try to start the project, run tests, and understand current progress. Record every problem it encounters — each one corresponds to a missing clause in your startup readiness checklist.
 
-2. **Comparison experiment**: Pick a moderately complex new project. Approach A: let the agent initialize and do first implementation simultaneously. Approach B: spend one session on dedicated initialization, start implementation in session 2. After 4 sessions, compare time to first verification, rebuild cost, and feature completion rate.
+2. **Comparison experiment**: Pick a moderately complex new project. Approach A: let the agent initialize and do first implementation simultaneously. Approach B: spend one session on dedicated initialization, start implementation in session 2. After 4 sessions, compare time from start to first passing test, rebuild cost, and feature completion rate.
 
 3. **Initialization acceptance checklist**: Design an initialization acceptance checklist for your project. Have a fresh agent session execute each checklist item and record which pass and which fail. The failing items are where your harness needs strengthening.
